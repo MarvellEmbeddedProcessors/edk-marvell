@@ -124,7 +124,7 @@
   gMarvellTokenSpaceGuid.PcdChip0Compatible|L"Cp110"
 
   gMarvellTokenSpaceGuid.PcdChip0ComPhyTypes|L"SGMII2;USB3_HOST0;SGMII0;SATA1;USB3_HOST1;PCIE2"
-  gMarvellTokenSpaceGuid.PcdChip0ComPhySpeeds|L"3125;5000;1250;5000;5000;5000"
+  gMarvellTokenSpaceGuid.PcdChip0ComPhySpeeds|L"1250;5000;1250;5000;5000;5000"
 
   #UtmiPhy
   gMarvellTokenSpaceGuid.PcdUtmiPhyCount|2
@@ -147,7 +147,7 @@
   gMarvellTokenSpaceGuid.PcdPp2PortIds|{ 0x0, 0x1, 0x2 }
   gMarvellTokenSpaceGuid.PcdPp2GopIndexes|{ 0x0, 0x2, 0x3 }
   gMarvellTokenSpaceGuid.PcdPp2InterfaceAlwaysUp|{ 0x1, 0x1, 0x0 }
-  gMarvellTokenSpaceGuid.PcdPp2InterfaceSpeed|{ 0x3, 0x4, 0x3 }
+  gMarvellTokenSpaceGuid.PcdPp2InterfaceSpeed|{ 0x3, 0x3, 0x3 }
   gMarvellTokenSpaceGuid.PcdPp2SharedAddress|0xf2000000
   gMarvellTokenSpaceGuid.PcdPp2GmacBaseAddress|0xf2130e00
   gMarvellTokenSpaceGuid.PcdPp2GmacObjSize|0x1000
