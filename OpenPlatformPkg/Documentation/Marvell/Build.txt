@@ -15,6 +15,7 @@ Supported {platform} are:
  - Apn806
  - Armada7040_rz
  - Armada70x0
+ - Armada80x0
 
 Supported {target} are
  - DEBUG
