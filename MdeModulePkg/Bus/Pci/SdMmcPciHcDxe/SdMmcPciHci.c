@@ -697,7 +697,6 @@ SdMmcHcClockSupply (
   UINT32                    BaseClkFreq;
   UINT32                    SettingFreq;
   UINT32                    Divisor;
-  UINT32                    Remainder;
   UINT16                    ControllerVer;
   UINT16                    ClockCtrl;
 
@@ -719,19 +718,18 @@ SdMmcHcClockSupply (
   // Calculate the divisor of base frequency.
   //
   Divisor     = 0;
-  SettingFreq = BaseClkFreq * 1000;
-  while (ClockFreq < SettingFreq) {
-    Divisor++;
-
-    SettingFreq = (BaseClkFreq * 1000) / (2 * Divisor);
-    Remainder   = (BaseClkFreq * 1000) % (2 * Divisor);
-    if ((ClockFreq == SettingFreq) && (Remainder == 0)) {
-      break;
-    }
-    if ((ClockFreq == SettingFreq) && (Remainder != 0)) {
-      SettingFreq ++;
+  SettingFreq = 400000;
+  // Version 3.00 Divisors must be a multiple of 2
+  if (SettingFreq <= ClockFreq) {
+    Divisor = 1;
+  } else {
+    for (Divisor = 2; Divisor < 2046; Divisor += 2) {
+      if ((SettingFreq / Divisor) <= ClockFreq)
+        break;
     }
   }
+  Divisor >>= 1;
+
 
   DEBUG ((EFI_D_INFO, "BaseClkFreq %dMHz Divisor %d ClockFreq %dKhz\n", BaseClkFreq, Divisor, ClockFreq));
 
