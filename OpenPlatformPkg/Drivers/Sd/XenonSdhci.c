@@ -244,7 +244,7 @@ XenonPhyInit (
 
   // Enable QSP PHASE SELECT
   SdMmcHcRwMmio (PciIo, SD_BAR_INDEX, EMMC_PHY_TIMING_ADJUST, TRUE, 4, &Var);
-  Var |= SAMPL_INV_QSP_PHASE_SELECT;
+  Var |= SAMPL_INV_QSP_PHASE_SELECT | (1 << 29);
   SdMmcHcRwMmio (PciIo, SD_BAR_INDEX, EMMC_PHY_TIMING_ADJUST, FALSE, 4, &Var);
 
   // Enable internal clock
