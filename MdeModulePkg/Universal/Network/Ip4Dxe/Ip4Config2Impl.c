@@ -1107,6 +1107,44 @@ Ip4Config2GetIfInfo (
 }
 
 /**
+  The work function is to update MAC address in interface configuration
+  structure. Other features handling can be added in future.
+
+  @param[in]     Instance The pointer to the IP4 config2 instance data.
+  @param[in]     DataSize The size of the buffer pointed to by Data in bytes.
+  @param[in]     Data     The data buffer to set. This points to new interface
+                          configuration structure.
+
+  @retval EFI_BAD_BUFFER_SIZE   The DataSize does not match the size of the type.
+  @retval EFI_SUCCESS           The specified configuration data for the interface
+                                was set.
+
+**/
+EFI_STATUS
+Ip4Config2SetIfInfo (
+  IN IP4_CONFIG2_INSTANCE *Instance,
+  IN UINTN                DataSize,
+  IN VOID                 *Data
+  )
+{
+  EFI_IP4_CONFIG2_INTERFACE_INFO *NewIfInfo;
+  EFI_IP4_CONFIG2_INTERFACE_INFO *IfInfo = &Instance->InterfaceInfo;
+  IP4_SERVICE            *IpSb;
+
+  if (DataSize != sizeof (EFI_IP4_CONFIG2_INTERFACE_INFO)) {
+    return EFI_BAD_BUFFER_SIZE;
+  }
+
+  NewIfInfo = (EFI_IP4_CONFIG2_INTERFACE_INFO *) Data;
+  IpSb     = IP4_SERVICE_FROM_IP4_CONFIG2_INSTANCE (Instance);
+
+  CopyMem (IfInfo->HwAddress.Addr, NewIfInfo->HwAddress.Addr, IfInfo->HwAddressSize);
+  CopyMem (IpSb->SnpMode.CurrentAddress.Addr, NewIfInfo->HwAddress.Addr, IfInfo->HwAddressSize);
+
+  return EFI_SUCCESS;
+}
+
+/**
   The work function is to set the general configuration policy for the EFI IPv4 network 
   stack that is running on the communication device managed by this IP4_CONFIG2_INSTANCE.
   The policy will affect other configuration settings.
@@ -1485,6 +1523,8 @@ Ip4Config2InitIfInfo (
   IfInfo->Name[2] = L'h';
   IfInfo->Name[3] = (CHAR16) (L'0' + IpSb->Ip4Config2Instance.IfIndex);
   IfInfo->Name[4] = 0;
+
+  DEBUG((DEBUG_ERROR, "Ip4Config2InitIfInfo\n"));
 
   IfInfo->IfType        = IpSb->SnpMode.IfType;
   IfInfo->HwAddressSize = IpSb->SnpMode.HwAddressSize;
@@ -1901,6 +1941,7 @@ Ip4Config2InitInstance (
   // fixed size data types, hook the SetData function, set the data attribute.
   //
   DataItem           = &Instance->DataItem[Ip4Config2DataTypeInterfaceInfo];
+  DataItem->SetData  = Ip4Config2SetIfInfo;
   DataItem->GetData  = Ip4Config2GetIfInfo;
   DataItem->Data.Ptr = &Instance->InterfaceInfo;
   DataItem->DataSize = sizeof (Instance->InterfaceInfo);

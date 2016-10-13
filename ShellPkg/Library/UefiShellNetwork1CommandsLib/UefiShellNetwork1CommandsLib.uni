@@ -65,6 +65,7 @@
 #string STR_IFCONFIG_LACK_COMMAND             #language en-US    "Lack interface config option.\n"
 #string STR_IFCONFIG_INVALID_INTERFACE        #language en-US    "Invalid interface name.\n"
 #string STR_IFCONFIG_INVALID_IPADDRESS        #language en-US    "Invalid ipv4 address: '%H%s%N'\n"
+#string STR_IFCONFIG_INVALID_MACADDRESS       #language en-US    "Invalid MAC address: '%H%s%N'\n"
 #string STR_IFCONFIG_DUPLICATE_COMMAND        #language en-US    "Duplicate commands. Bad command %H%s%N is skipped.\n"
 #string STR_IFCONFIG_CONFLICT_COMMAND         #language en-US    "Conflict commands. Bad command %H%s%N is skipped.\n"
 #string STR_IFCONFIG_UNKNOWN_COMMAND          #language en-US    "Unknown commands. Bad command %H%s%N is skipped.\n"
