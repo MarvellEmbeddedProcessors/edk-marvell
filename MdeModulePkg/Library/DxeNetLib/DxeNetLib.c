@@ -2782,7 +2782,7 @@ NetLibAsciiStrToMac (
     TempStr = MacStr;
 
     while ((*MacStr != '\0') && (*MacStr != ':')) {
-      if (!NET_IS_HEX (*MacStr)) {
+      if (!(NET_IS_HEX (*MacStr))) {
         return EFI_INVALID_PARAMETER;
       }
       MacStr++;
