@@ -1193,19 +1193,13 @@ IfConfigSetInterfaceInfo (
         goto ON_EXIT;
       }
 
-      CopyMem (IfCb->IfInfo->HwAddress.Addr, &NewMac.Addr, IfCb->IfInfo->HwAddressSize);
-
-      DataSize = sizeof (EFI_IP4_CONFIG2_INTERFACE_INFO);
-
-      Status = IfCb->IfCfg->SetData (
-                              IfCb->IfCfg,
-                              Ip4Config2DataTypeInterfaceInfo,
-                              DataSize,
-                              IfCb->IfInfo
-                              );
-      if (EFI_ERROR (Status)) {
-        ShellPrintHiiEx (-1, -1, NULL, STRING_TOKEN (STR_IFCONFIG_SET_ADDR_FAILED), gShellNetwork1HiiHandle, Status);
-        ShellStatus = SHELL_ACCESS_DENIED;
+      //
+      // Reconnect controller, so that all children get updated with
+      // new MAC address information.
+      //
+      Status = NetLibReconnectInterface (IfCb->NicHandle);
+      if (EFI_ERROR(Status)) {
+        ShellStatus = SHELL_DEVICE_ERROR;
         goto ON_EXIT;
       }
 

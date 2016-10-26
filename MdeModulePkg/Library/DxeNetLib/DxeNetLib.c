@@ -2247,6 +2247,35 @@ NetLibSetMacAddress (
 }
 
 /**
+  Reconnect the network service handle.
+
+  Reconnect Service Binding Handle using Boot Services Dis/ConnectController() routines.
+
+  @param[in]   ServiceHandle    The handle where network service binding protocols are
+                                installed on.
+
+  @retval EFI_SUCCESS           Interface handle was reconnected successfully.
+  @retval Others                Failed to reconnect interface handle.
+
+**/
+EFI_STATUS
+EFIAPI
+NetLibReconnectInterface (
+  IN EFI_HANDLE             ServiceHandle
+  )
+{
+  EFI_STATUS Status;
+
+  Status = gBS->DisconnectController(ServiceHandle, NULL, NULL);
+  if (!EFI_ERROR (Status)) {
+    Status = gBS->ConnectController(ServiceHandle, NULL, NULL, TRUE);
+  }
+
+  return Status;
+}
+
+
+/**
   Convert MAC address of the NIC associated with specified Service Binding Handle
   to a unicode string. Callers are responsible for freeing the string storage.
 
