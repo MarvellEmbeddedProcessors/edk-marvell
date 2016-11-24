@@ -251,9 +251,9 @@
 
 [PcdsFixedAtBuild.common]
   gArmPlatformTokenSpaceGuid.PcdFirmwareVendor|"Marvell"
-  gEfiMdeModulePkgTokenSpaceGuid.PcdFirmwareVersionString|L"MARVELL devel-16.10.0"
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFirmwareVersionString|L"MARVELL devel-16.11.0"
   gEfiMdeModulePkgTokenSpaceGuid.PcdFirmwareRevision|0x1
-  gEfiMdeModulePkgTokenSpaceGuid.PcdFirmwareVendor|L"Marvell devel-16.10.0"
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFirmwareVendor|L"Marvell devel-16.11.0"
   gArmPlatformTokenSpaceGuid.PcdCoreCount|4
   # gArmPlatformTokenSpaceGuid.PcdClusterCount|1
 
