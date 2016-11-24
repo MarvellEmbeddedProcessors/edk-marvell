@@ -168,4 +168,4 @@
   gMarvellTokenSpaceGuid.PcdSataBaseAddress|0xF2540000
 
 [PcdsFeatureFlag.common]
-  gMarvellTokenSpaceGuid.PcdSataMapPortAddress|TRUE
+  gMarvellTokenSpaceGuid.PcdSataMapPortAddress|FALSE
