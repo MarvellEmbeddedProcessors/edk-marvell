@@ -148,86 +148,6 @@ EmmcSendStatus (
 }
 
 /**
-  Send command EMMC_SET_BLOCKLEN to the device to set block length.
-
-  @param[in]  Device            A pointer to the EMMC_DEVICE instance.
-  @param[in]  len               The block len to use.
-
-  @retval EFI_SUCCESS           The request is executed successfully.
-  @retval EFI_OUT_OF_RESOURCES  The request could not be executed due to a lack of resources.
-  @retval Others                The request could not be executed successfully.
-
-**/
-EFI_STATUS
-EmmcSetBlockLen (
-  IN     EMMC_DEVICE                  *Device,
-  IN     UINT32                       len
-  )
-{
-  EFI_STATUS                          Status;
-  EFI_SD_MMC_PASS_THRU_PROTOCOL       *PassThru;
-  EFI_SD_MMC_COMMAND_BLOCK            SdMmcCmdBlk;
-  EFI_SD_MMC_STATUS_BLOCK             SdMmcStatusBlk;
-  EFI_SD_MMC_PASS_THRU_COMMAND_PACKET Packet;
-
-  PassThru = Device->Private->PassThru;
-
-  ZeroMem (&SdMmcCmdBlk, sizeof (SdMmcCmdBlk));
-  ZeroMem (&Packet, sizeof (Packet));
-  Packet.SdMmcCmdBlk    = &SdMmcCmdBlk;
-  Packet.SdMmcStatusBlk = &SdMmcStatusBlk;
-  Packet.Timeout        = EMMC_GENERIC_TIMEOUT;
-
-  SdMmcCmdBlk.CommandIndex = EMMC_SET_BLOCKLEN;
-  SdMmcCmdBlk.CommandType  = SdMmcCommandTypeAc;
-  SdMmcCmdBlk.ResponseType = SdMmcResponseTypeR1;
-  SdMmcCmdBlk.CommandArgument = len;
-
-  Status = PassThru->PassThru (PassThru, Device->Slot, &Packet, NULL);
-
-  return Status;
-}
-
-/**
-  Send command EMMC_STOP_TRANSMISSION to the device.
-
-  @param[in]  Device            A pointer to the EMMC_DEVICE instance.
-
-  @retval EFI_SUCCESS           The request is executed successfully.
-  @retval EFI_OUT_OF_RESOURCES  The request could not be executed due to a lack of resources.
-  @retval Others                The request could not be executed successfully.
-
-**/
-EFI_STATUS
-EmmcStopTransmision (
-  IN     EMMC_DEVICE                  *Device
-  )
-{
-  EFI_STATUS                          Status;
-  EFI_SD_MMC_PASS_THRU_PROTOCOL       *PassThru;
-  EFI_SD_MMC_COMMAND_BLOCK            SdMmcCmdBlk;
-  EFI_SD_MMC_STATUS_BLOCK             SdMmcStatusBlk;
-  EFI_SD_MMC_PASS_THRU_COMMAND_PACKET Packet;
-
-  PassThru = Device->Private->PassThru;
-
-  ZeroMem (&SdMmcCmdBlk, sizeof (SdMmcCmdBlk));
-  ZeroMem (&Packet, sizeof (Packet));
-  Packet.SdMmcCmdBlk    = &SdMmcCmdBlk;
-  Packet.SdMmcStatusBlk = &SdMmcStatusBlk;
-  Packet.Timeout        = EMMC_GENERIC_TIMEOUT;
-
-  SdMmcCmdBlk.CommandIndex = EMMC_STOP_TRANSMISSION;
-  SdMmcCmdBlk.CommandType  = SdMmcCommandTypeAc;
-  SdMmcCmdBlk.ResponseType = SdMmcResponseTypeR1b;
-  SdMmcCmdBlk.CommandArgument = 0;
-
-  Status = PassThru->PassThru (PassThru, Device->Slot, &Packet, NULL);
-
-  return Status;
-}
-
-/**
   Send command SEND_CSD to the device to get the CSD register data.
 
   @param[in]  Device            A pointer to the EMMC_DEVICE instance.
@@ -971,7 +891,7 @@ EmmcReadWrite (
     } else {
       BlockNum = MaxBlock;
     }
-    Status = EmmcSetBlockLen (Device, BlockSize);
+    Status = EmmcSetBlkCount (Partition, (UINT16)BlockNum, Token, FALSE);
     if (EFI_ERROR (Status)) {
       return Status;
     }
@@ -986,11 +906,6 @@ EmmcReadWrite (
     Lba   += BlockNum;
     Buffer = (UINT8*)Buffer + BufferSize;
     Remaining -= BlockNum;
-  }
-
-  Status = EmmcStopTransmision(Device);
-  if (EFI_ERROR (Status)) {
- 	  return Status;
   }
 
   return Status;

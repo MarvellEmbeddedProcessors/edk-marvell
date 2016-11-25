@@ -189,36 +189,6 @@ SdSendStatus (
   return Status;
 }
 
-EFI_STATUS
-SdSetBlockLen (
-  IN     SD_DEVICE              *Device,
-  IN     UINTN Length
-  )
-{
-  EFI_STATUS                           Status;
-  EFI_SD_MMC_PASS_THRU_PROTOCOL        *PassThru;
-  EFI_SD_MMC_COMMAND_BLOCK             SdMmcCmdBlk;
-  EFI_SD_MMC_STATUS_BLOCK              SdMmcStatusBlk;
-  EFI_SD_MMC_PASS_THRU_COMMAND_PACKET  Packet;
-
-  PassThru = Device->Private->PassThru;
-
-  ZeroMem (&SdMmcCmdBlk, sizeof (SdMmcCmdBlk));
-  ZeroMem (&SdMmcStatusBlk, sizeof (SdMmcStatusBlk));
-  ZeroMem (&Packet, sizeof (Packet));
-  Packet.SdMmcCmdBlk    = &SdMmcCmdBlk;
-  Packet.SdMmcStatusBlk = &SdMmcStatusBlk;
-  Packet.Timeout        = SD_GENERIC_TIMEOUT;
-
-  SdMmcCmdBlk.CommandIndex = SD_SET_BLOCKLEN;
-  SdMmcCmdBlk.CommandType  = SdMmcCommandTypeAc;
-  SdMmcCmdBlk.ResponseType = SdMmcResponseTypeR1;
-  SdMmcCmdBlk.CommandArgument = Length;
-
-  Status = PassThru->PassThru (PassThru, Device->Slot, &Packet, NULL);
-
-  return Status;
-}
 /**
   Send command SEND_CSD to the device to get the CSD register data.
 
@@ -452,46 +422,6 @@ Error:
   return Status;
 }
 
-STATIC
-EFI_STATUS
-IsReady (
-  SD_DEVICE *Device,
-  UINT16 Rca,
-  UINTN Timeout
-  )
-{
-  EFI_STATUS Status;
-  UINT32 DevStatus;
-
-  do {
-    Status = SdSendStatus (Device, Rca, &DevStatus);
-    if (EFI_ERROR (Status)) {
-      DEBUG((DEBUG_INFO, "SD: Cannot read Status\n"));
-      return Status;
-    }
-    // Check device status
-    if ((DevStatus & (1 << 8)) && (DevStatus & (0xf << 9)) != (7 << 9))
-      break;
-    else if (DevStatus & ~0x0206BF7F) {
-      DEBUG((DEBUG_ERROR, "SD: Status Error\n"));
-      return EFI_DEVICE_ERROR;
-    }
-
-    gBS->Stall (1000);
-  } while (Timeout--);
-
-  if (Timeout <= 0) {
-    DEBUG((DEBUG_ERROR, "SD: Status timeout\n"));
-    return EFI_TIMEOUT;
-  }
-
-  if (DevStatus & (1 << 7)) {
-    DEBUG((DEBUG_ERROR, "SD: Switch error\n"));
-    return EFI_DEVICE_ERROR;
-  }
-
-  return EFI_SUCCESS;
-}
 /**
   Read/write multiple blocks through sync or async I/O request.
 
@@ -523,7 +453,7 @@ SdRwMultiBlocks (
   )
 {
   EFI_STATUS                    Status;
-  SD_REQUEST                    *RwMultiBlkReq, *StopBlkReq = NULL;
+  SD_REQUEST                    *RwMultiBlkReq;
   EFI_SD_MMC_PASS_THRU_PROTOCOL *PassThru;
   EFI_TPL                       OldTpl;
 
@@ -537,20 +467,12 @@ SdRwMultiBlocks (
     goto Error;
   }
 
-  StopBlkReq = AllocateZeroPool (sizeof (SD_REQUEST));
-  if (StopBlkReq == NULL) {
-    Status = EFI_OUT_OF_RESOURCES;
-    goto Error;
-  }
-
   RwMultiBlkReq->Signature = SD_REQUEST_SIGNATURE;
   OldTpl = gBS->RaiseTPL (TPL_CALLBACK);
   InsertTailList (&Device->Queue, &RwMultiBlkReq->Link);
   gBS->RestoreTPL (OldTpl);
   RwMultiBlkReq->Packet.SdMmcCmdBlk    = &RwMultiBlkReq->SdMmcCmdBlk;
   RwMultiBlkReq->Packet.SdMmcStatusBlk = &RwMultiBlkReq->SdMmcStatusBlk;
-  StopBlkReq->Packet.SdMmcCmdBlk    = &StopBlkReq->SdMmcCmdBlk;
-  StopBlkReq->Packet.SdMmcStatusBlk = &StopBlkReq->SdMmcStatusBlk;
   //
   // Calculate timeout value through the below formula.
   // Timeout = (transfer size) / (2MB/s).
@@ -601,18 +523,6 @@ SdRwMultiBlocks (
   }
 
   Status = PassThru->PassThru (PassThru, Device->Slot, &RwMultiBlkReq->Packet, RwMultiBlkReq->Event);
-  if (EFI_ERROR(Status)) {
-    goto Error;
-  }
-
-  // Send STOP_TRANSMISSION command for multi block transfers
-  StopBlkReq->SdMmcCmdBlk.CommandIndex = SD_STOP_TRANSMISSION;
-  StopBlkReq->SdMmcCmdBlk.CommandType  = SdMmcCommandTypeAc;
-  StopBlkReq->SdMmcCmdBlk.ResponseType = SdMmcResponseTypeR1b;
-  StopBlkReq->SdMmcCmdBlk.CommandArgument = 0;
-
-  Status = PassThru->PassThru (PassThru, Device->Slot, &StopBlkReq->Packet,
-    NULL);
 
 Error:
   if ((Token != NULL) && (Token->Event != NULL)) {
@@ -626,7 +536,6 @@ Error:
         gBS->CloseEvent (RwMultiBlkReq->Event);
       }
       FreePool (RwMultiBlkReq);
-      FreePool (StopBlkReq);
     }
   } else {
     //
@@ -635,9 +544,6 @@ Error:
     if (RwMultiBlkReq != NULL) {
       RemoveEntryList (&RwMultiBlkReq->Link);
       FreePool (RwMultiBlkReq);
-    }
-    if (StopBlkReq != NULL) {
-      FreePool (StopBlkReq);
     }
   }
 
@@ -737,7 +643,7 @@ SdReadWrite (
   // Start to execute data transfer. The max block number in single cmd is 65535 blocks.
   //
   Remaining = BlockNum;
-  MaxBlock  = 2020;
+  MaxBlock  = 0xFFFF;
 
   while (Remaining > 0) {
     if (Remaining <= MaxBlock) {
@@ -751,23 +657,13 @@ SdReadWrite (
     if (BlockNum == 1) {
       Status = SdRwSingleBlock (Device, Lba, Buffer, BufferSize, IsRead, Token, LastRw);
     } else {
-      SdSetBlockLen (Device, 0x200);
       Status = SdRwMultiBlocks (Device, Lba, Buffer, BufferSize, IsRead, Token, LastRw);
     }
     if (EFI_ERROR (Status)) {
       return Status;
     }
-
-    if (!IsRead) {
-      // Poll for device status to check if it's ready for next transaction
-      if (IsReady (Device, Device->Rca, 1000) == EFI_SUCCESS) {
-        Status = EFI_SUCCESS;
-      }
-      else
-        Status = EFI_DEVICE_ERROR;
-    }
-
     DEBUG ((EFI_D_INFO, "Sd%a(): Lba 0x%x BlkNo 0x%x Event %p with %r\n", IsRead ? "Read" : "Write", Lba, BlockNum, Token->Event, Status));
+
     Lba   += BlockNum;
     Buffer = (UINT8*)Buffer + BufferSize;
     Remaining -= BlockNum;
@@ -999,7 +895,7 @@ SdReadBlocksEx (
 
   Device = SD_DEVICE_DATA_FROM_BLKIO2 (This);
 
-  Status = SdReadWrite (Device, MediaId, Lba, Buffer, BufferSize, TRUE, NULL);
+  Status = SdReadWrite (Device, MediaId, Lba, Buffer, BufferSize, TRUE, Token);
   return Status;
 }
 
@@ -1041,7 +937,7 @@ SdWriteBlocksEx (
 
   Device = SD_DEVICE_DATA_FROM_BLKIO2 (This);
 
-  Status = SdReadWrite (Device, MediaId, Lba, Buffer, BufferSize, FALSE, NULL);
+  Status = SdReadWrite (Device, MediaId, Lba, Buffer, BufferSize, FALSE, Token);
   return Status;
 }
 
