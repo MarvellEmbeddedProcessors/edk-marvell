@@ -103,16 +103,16 @@
   gMarvellTokenSpaceGuid.PcdRamDiskSize|64 #64MB
 
   #PciEmulation
-  gMarvellTokenSpaceGuid.PcdPciEDevCount|4
-                                                ## XHCI1       XHCI2      SATA       MMC
-  gMarvellTokenSpaceGuid.PcdPciEDevBaseAddress|L"0xF2500000;0xF2510000;0xF2540000;0xF06E0000"
-  gMarvellTokenSpaceGuid.PcdPciEDevRegSize|L"0x10000;0x10000;0x30000;0x300"
+  gMarvellTokenSpaceGuid.PcdPciEDevCount|5
+                                                ## XHCI1       XHCI2      SATA       SDHCI       eMMC
+  gMarvellTokenSpaceGuid.PcdPciEDevBaseAddress|L"0xF2500000;0xF2510000;0xF2540000;0xF06E0000;0xF2780000"
+  gMarvellTokenSpaceGuid.PcdPciEDevRegSize|L"0x10000;0x10000;0x30000;0x300;0x300"
   ## ClassCode1
-  gMarvellTokenSpaceGuid.PcdPciEDevClassCode1|L"0x30;0x30;0x01;0x01"
+  gMarvellTokenSpaceGuid.PcdPciEDevClassCode1|L"0x30;0x30;0x01;0x01;0x1"
   ## ClassCode2
-  gMarvellTokenSpaceGuid.PcdPciEDevClassCode2|L"0x03;0x03;0x06;0x05"
+  gMarvellTokenSpaceGuid.PcdPciEDevClassCode2|L"0x03;0x03;0x06;0x05;0x5"
   ## ClassCode3
-  gMarvellTokenSpaceGuid.PcdPciEDevClassCode3|L"0x0C;0x0C;0x01;0x08"
+  gMarvellTokenSpaceGuid.PcdPciEDevClassCode3|L"0x0C;0x0C;0x01;0x08;0x8"
 
   #ComPhy
   gMarvellTokenSpaceGuid.PcdComPhyChipCount|1
