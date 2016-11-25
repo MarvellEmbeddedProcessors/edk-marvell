@@ -125,9 +125,9 @@ FvNameGuid         = 5eda4200-2c5f-43cb-9da3-0baf74b1b30c
   INF MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
 
   # SD/MMC
-  INF OpenPlatformPkg/Drivers/Sd/MvSdMmcPciHcDxe.inf
   INF MdeModulePkg/Bus/Sd/SdDxe/SdDxe.inf
   INF MdeModulePkg/Bus/Sd/EmmcDxe/EmmcDxe.inf
+  INF OpenPlatformPkg/Drivers/SdMmc/XenonDxe/SdMmcPciHcDxe.inf
 
   # Network support
   INF MdeModulePkg/Universal/Network/SnpDxe/SnpDxe.inf

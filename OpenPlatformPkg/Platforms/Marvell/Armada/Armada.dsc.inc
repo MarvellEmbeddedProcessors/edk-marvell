@@ -443,9 +443,9 @@
   MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
 
   # SD/MMC
-  OpenPlatformPkg/Drivers/Sd/MvSdMmcPciHcDxe.inf
   MdeModulePkg/Bus/Sd/SdDxe/SdDxe.inf
   MdeModulePkg/Bus/Sd/EmmcDxe/EmmcDxe.inf
+  OpenPlatformPkg/Drivers/SdMmc/XenonDxe/SdMmcPciHcDxe.inf
 
   # Console packages
   MdeModulePkg/Universal/Console/ConPlatformDxe/ConPlatformDxe.inf
