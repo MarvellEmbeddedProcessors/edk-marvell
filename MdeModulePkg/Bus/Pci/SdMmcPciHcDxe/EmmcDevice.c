@@ -11,7 +11,6 @@
   WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 
 **/
-#include <Library/TimerLib.h>
 
 #include "SdMmcPciHcDxe.h"
 
@@ -51,8 +50,6 @@ EmmcReset (
   SdMmcCmdBlk.CommandType  = SdMmcCommandTypeBc;
   SdMmcCmdBlk.ResponseType = 0;
   SdMmcCmdBlk.CommandArgument = 0;
-
-  gBS->Stall (1000);
 
   Status = SdMmcPassThruPassThru (PassThru, Slot, &Packet, NULL);
 
@@ -1082,7 +1079,7 @@ EmmcSetBusMode (
     //
     // Execute High Speed timing switch procedure
     //
-    Status = EmmcSwitchToHighSpeed (PciIo, PassThru, Slot, Rca, ClockFreq, IsDdr, BusWidth);
+    Status = EmmcSwitchToHighSpeed (PciIo, PassThru, Slot, Rca, ClockFreq, BusWidth, IsDdr);
   }
 
   DEBUG ((EFI_D_INFO, "EmmcSetBusMode: Switch to %a %r\n", (HsTiming == 3) ? "HS400" : ((HsTiming == 2) ? "HS200" : "HighSpeed"), Status));

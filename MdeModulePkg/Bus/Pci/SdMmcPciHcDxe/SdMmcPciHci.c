@@ -17,7 +17,6 @@
 
 #include "SdMmcPciHcDxe.h"
 
-#include <Library/IoLib.h>
 /**
   Dump the content of SD/MMC host controller's Capability Register.
 
@@ -697,6 +696,7 @@ SdMmcHcClockSupply (
   UINT32                    BaseClkFreq;
   UINT32                    SettingFreq;
   UINT32                    Divisor;
+  UINT32                    Remainder;
   UINT16                    ControllerVer;
   UINT16                    ClockCtrl;
 
@@ -718,18 +718,19 @@ SdMmcHcClockSupply (
   // Calculate the divisor of base frequency.
   //
   Divisor     = 0;
-  SettingFreq = 400000;
-  // Version 3.00 Divisors must be a multiple of 2
-  if (SettingFreq <= ClockFreq) {
-    Divisor = 1;
-  } else {
-    for (Divisor = 2; Divisor < 2046; Divisor += 2) {
-      if ((SettingFreq / Divisor) <= ClockFreq)
-        break;
+  SettingFreq = BaseClkFreq * 1000;
+  while (ClockFreq < SettingFreq) {
+    Divisor++;
+
+    SettingFreq = (BaseClkFreq * 1000) / (2 * Divisor);
+    Remainder   = (BaseClkFreq * 1000) % (2 * Divisor);
+    if ((ClockFreq == SettingFreq) && (Remainder == 0)) {
+      break;
+    }
+    if ((ClockFreq == SettingFreq) && (Remainder != 0)) {
+      SettingFreq ++;
     }
   }
-  Divisor >>= 1;
-
 
   DEBUG ((EFI_D_INFO, "BaseClkFreq %dMHz Divisor %d ClockFreq %dKhz\n", BaseClkFreq, Divisor, ClockFreq));
 
@@ -1313,11 +1314,6 @@ SdMmcCreateTrb (
     }
   }
 
-  // Hardcode no DMA
-  if (Trb->Mode != SdMmcNoData) {
-    Trb->Mode = SdMmcAdmaMode;
-  }
-
   if (Event != NULL) {
     OldTpl = gBS->RaiseTPL (TPL_CALLBACK);
     InsertTailList (&Private->Queue, &Trb->TrbList);
@@ -1678,7 +1674,6 @@ SdMmcCheckTrbResult (
   //
   // Check Trb execution result by reading Normal Interrupt Status register.
   //
-
   Status = SdMmcHcRwMmio (
              Private->PciIo,
              Trb->Slot,
