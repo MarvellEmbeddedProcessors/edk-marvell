@@ -198,7 +198,7 @@ In order to enable driver on a new platform, following steps need to be taken:
 
 PciEmulation configuration
 ==========================
-Instalation of various Pci devices via PciEmulation driver is performed via set
+Installation of various Pci devices via PciEmulation driver is performed via set
 of PCDs. Following are available:
 
   - gMarvellTokenSpaceGuid.PcdPciEDevCount
